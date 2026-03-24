@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Import from Addon - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Import from WoW Addon</h2>
+
+{% if imported %}
+<div class="flash-success">
+    Imported {{ imported }} new run(s){% if skipped %}, skipped {{ skipped }} duplicate(s){% endif %}.
+</div>
+{% endif %}
+
+{% if error %}
+<article style="border-left: 3px solid #ef4444; padding-left: 1rem;">
+    <strong>Error:</strong> {{ error }}
+</article>
+{% endif %}
+
+<article>
+    <header><strong>How it works</strong></header>
+    <ol>
+        <li>Install the <code>MythicPlusTracker</code> addon in your WoW addons folder</li>
+        <li>Play M+ dungeons — the addon automatically saves run data</li>
+        <li>After your session, point this importer at the SavedVariables file and click Import</li>
+    </ol>
+    <p><small>
+        Addon location: <code>wow_addon/MythicPlusTracker/</code> in this project.<br>
+        Copy it to: <code>World of Warcraft/_retail_/Interface/AddOns/MythicPlusTracker/</code>
+    </small></p>
+</article>
+
+<form method="post" action="/import/addon">
+    <label>
+        SavedVariables File Path
+        <input type="text" name="wow_path"
+               value="{{ default_path }}"
+               placeholder="/path/to/WTF/Account/YOURNAME/SavedVariables/MythicPlusTracker.lua">
+    </label>
+    <small>
+        Typical paths:<br>
+        Windows: <code>C:\Program Files\World of Warcraft\_retail_\WTF\Account\YOURACCOUNT\SavedVariables\MythicPlusTracker.lua</code><br>
+        Mac: <code>/Applications/World of Warcraft/_retail_/WTF/Account/YOURACCOUNT/SavedVariables/MythicPlusTracker.lua</code>
+    </small>
+    <button type="submit">Import Runs</button>
+</form>
+
+<h3>What gets imported</h3>
+<table>
+    <thead><tr><th>Data</th><th>Source</th></tr></thead>
+    <tbody>
+        <tr><td>Dungeon, key level, affixes</td><td>C_ChallengeMode API</td></tr>
+        <tr><td>Timed/depleted, duration, stars</td><td>Completion event</td></tr>
+        <tr><td>Group comp (name, realm, class, spec, role)</td><td>Group roster + inspect</td></tr>
+        <tr><td>Item levels</td><td>Inspect API</td></tr>
+        <tr><td>Deaths</td><td>Combat log (UNIT_DIED)</td></tr>
+        <tr><td>Gold before/after</td><td>GetMoney()</td></tr>
+        <tr><td>Durability before/after</td><td>Equipment scan</td></tr>
+        <tr><td>Companion pet</td><td>C_PetJournal</td></tr>
+        <tr><td>Your mount</td><td>C_MountJournal</td></tr>
+        <tr><td>Group mounts</td><td>Buff scan (best effort)</td></tr>
+        <tr><td>Flask/food/rune check</td><td>UnitAura scan</td></tr>
+        <tr><td>/played time</td><td>RequestTimePlayed</td></tr>
+    </tbody>
+</table>
+{% endblock %}

@@ -47,6 +47,22 @@ class Run(SQLModel, table=True):
     vibe: Optional[str] = None  # chill, sweaty, chaotic, tilting, cracked
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+    # Import tracking
+    addon_run_id: Optional[str] = Field(default=None, index=True)  # dedup for addon imports
+    wcl_report_id: Optional[str] = None  # Warcraft Logs report code
+    wcl_fight_id: Optional[int] = None  # WCL fight ID within report
+    source: Optional[str] = None  # "manual", "addon", "warcraftlogs"
+
+    # Addon fun data
+    gold_before: Optional[int] = None
+    gold_after: Optional[int] = None
+    durability_before: Optional[float] = None  # average %
+    durability_after: Optional[float] = None
+    companion_pet: Optional[str] = None
+    my_mount: Optional[str] = None
+    played_seconds: Optional[int] = None  # time in M+ during this run
+    buffs_json: Optional[str] = None  # JSON: who had flask/food/rune
+
     members: list["RunMember"] = Relationship(back_populates="run")
     songs: list["RunSong"] = Relationship(back_populates="run")
 
@@ -58,6 +74,10 @@ class RunMember(SQLModel, table=True):
     spec: Optional[str] = None
     role: Optional[str] = None
     was_me: bool = False
+    ilvl: Optional[float] = None
+    dps: Optional[float] = None
+    hps: Optional[float] = None
+    performance_score: Optional[float] = None  # WCL percentile
 
     run: Optional[Run] = Relationship(back_populates="members")
     character: Optional[Character] = Relationship(back_populates="run_memberships")
@@ -79,4 +99,10 @@ class SpotifyToken(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     access_token: str
     refresh_token: str
+    expires_at: datetime
+
+
+class WarcraftLogsToken(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    access_token: str
     expires_at: datetime

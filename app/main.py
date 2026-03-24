@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.database import init_db
-from app.routers import runs, characters, spotify, stats
+from app.routers import runs, characters, spotify, stats, addon_import, warcraftlogs
 
 
 @asynccontextmanager
@@ -21,6 +21,8 @@ app.include_router(runs.router)
 app.include_router(characters.router)
 app.include_router(spotify.router)
 app.include_router(stats.router)
+app.include_router(addon_import.router)
+app.include_router(warcraftlogs.router)
 
 
 @app.get("/")

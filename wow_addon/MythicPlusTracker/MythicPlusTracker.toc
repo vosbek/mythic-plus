@@ -1,0 +1,8 @@
+## Interface: 120001
+## Title: MythicPlusTracker
+## Notes: Lightweight M+ run data collector for external companion app
+## Author: vosbek
+## Version: 1.0.0
+## SavedVariables: MythicPlusTrackerDB
+
+MythicPlusTracker.lua

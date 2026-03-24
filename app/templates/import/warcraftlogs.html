@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Import from Warcraft Logs - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Import from Warcraft Logs</h2>
+
+{% if imported or enriched %}
+<div class="flash-success">
+    {% if imported %}Imported {{ imported }} new run(s). {% endif %}
+    {% if enriched %}Enriched {{ enriched }} existing run(s) with DPS/HPS data. {% endif %}
+    {% if skipped %}Skipped {{ skipped }} already-imported run(s).{% endif %}
+</div>
+{% endif %}
+
+{% if error %}
+<article style="border-left: 3px solid #ef4444; padding-left: 1rem;">
+    <strong>Error:</strong> {{ error }}
+</article>
+{% endif %}
+
+{% if not configured %}
+<article>
+    <header><strong>Setup Required</strong></header>
+    <p>To use Warcraft Logs integration:</p>
+    <ol>
+        <li>Go to <code>https://www.warcraftlogs.com/api/clients/</code> and create a new client</li>
+        <li>Copy your Client ID and Client Secret to your <code>.env</code> file</li>
+    </ol>
+    <pre><code>WCL_CLIENT_ID=your_client_id
+WCL_CLIENT_SECRET=your_client_secret</code></pre>
+    <p>Then restart the app.</p>
+</article>
+
+{% else %}
+<article>
+    <header><strong>How it works</strong></header>
+    <p>This fetches your recent M+ runs from Warcraft Logs and either:</p>
+    <ul>
+        <li><strong>Creates new runs</strong> if they don't exist in your tracker yet</li>
+        <li><strong>Enriches existing runs</strong> (from addon import) with DPS/HPS data per player</li>
+    </ul>
+    <p>Matching is done by dungeon + key level + timestamp, so addon-imported runs get linked to their WCL reports automatically.</p>
+</article>
+
+<form method="post" action="/import/warcraftlogs">
+    <div class="grid">
+        <label>
+            Character Name
+            <input type="text" name="char_name" value="{{ character.name }}" placeholder="Saytees">
+        </label>
+        <label>
+            Realm
+            <input type="text" name="char_realm" value="{{ character.realm }}" placeholder="Stormrage">
+        </label>
+    </div>
+    <button type="submit">Import from Warcraft Logs</button>
+</form>
+
+<h3>What gets imported/enriched</h3>
+<table>
+    <thead><tr><th>Data</th><th>New Runs</th><th>Enrichment</th></tr></thead>
+    <tbody>
+        <tr><td>Dungeon, key level</td><td>Yes</td><td>--</td></tr>
+        <tr><td>Timed/depleted, duration</td><td>Yes</td><td>--</td></tr>
+        <tr><td>Group composition</td><td>Yes</td><td>--</td></tr>
+        <tr><td>DPS per player</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>HPS per player</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>WCL report link</td><td>Yes</td><td>Yes</td></tr>
+    </tbody>
+</table>
+
+<p><small>
+    Data is fetched via the <a href="https://www.warcraftlogs.com/api/docs" target="_blank">Warcraft Logs API v2</a> (GraphQL).
+    You must upload your combat logs to Warcraft Logs for this to work.
+</small></p>
+{% endif %}
+{% endblock %}

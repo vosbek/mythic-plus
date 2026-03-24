@@ -58,12 +58,42 @@
         <small>
             {{ md.member.spec or '' }} {{ md.character.class_name or '' }}
             {% if md.member.role %} &middot; {{ md.member.role | capitalize }}{% endif %}
+            {% if md.member.ilvl %} &middot; {{ md.member.ilvl | int }} ilvl{% endif %}
+            {% if md.member.dps %}<br>DPS: {{ '{:,.0f}'.format(md.member.dps) }}{% endif %}
+            {% if md.member.hps %} | HPS: {{ '{:,.0f}'.format(md.member.hps) }}{% endif %}
         </small>
     </div>
     {% endfor %}
 </div>
 {% else %}
 <p><small>No group data recorded.</small></p>
+{% endif %}
+
+{% if run.my_mount or run.companion_pet or run.gold_before is not none or run.durability_before is not none %}
+<h3>Run Details</h3>
+<div class="grid">
+    {% if run.my_mount %}
+    <div><strong>Mount:</strong> {{ run.my_mount }}</div>
+    {% endif %}
+    {% if run.companion_pet %}
+    <div><strong>Companion Pet:</strong> {{ run.companion_pet }}</div>
+    {% endif %}
+    {% if run.gold_before is not none and run.gold_after is not none %}
+    <div><strong>Gold Cost:</strong> {{ '{:,.0f}'.format((run.gold_before - run.gold_after) / 10000) }}g</div>
+    {% endif %}
+    {% if run.durability_before is not none and run.durability_after is not none %}
+    <div><strong>Durability:</strong> {{ run.durability_before }}% &rarr; {{ run.durability_after }}%</div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if run.buffs_json %}
+<h3>Pre-Key Buff Check</h3>
+<p><small>{{ run.buffs_json }}</small></p>
+{% endif %}
+
+{% if run.wcl_report_id %}
+<p><a href="https://www.warcraftlogs.com/reports/{{ run.wcl_report_id }}" target="_blank">View on Warcraft Logs</a></p>
 {% endif %}
 
 {% if songs %}

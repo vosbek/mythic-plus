@@ -10,6 +10,13 @@ SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://localhost:8000/
 
 RAIDERIO_BASE_URL = "https://raider.io/api/v1"
 
+# WoW Addon Import
+WOW_SAVEDVARIABLES_PATH = os.getenv("WOW_SAVEDVARIABLES_PATH", "")
+
+# Warcraft Logs
+WCL_CLIENT_ID = os.getenv("WCL_CLIENT_ID", "")
+WCL_CLIENT_SECRET = os.getenv("WCL_CLIENT_SECRET", "")
+
 # Default user character
 DEFAULT_CHARACTER = {
     "name": "Saytees",
