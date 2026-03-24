@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Run History - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Run History</h2>
+
+<details>
+    <summary>Filters</summary>
+    <form method="get" action="/runs">
+        <div class="grid">
+            <label>
+                Dungeon
+                <select name="dungeon">
+                    <option value="">All</option>
+                    {% for d in dungeons %}
+                    <option value="{{ d.name }}" {% if filter_dungeon == d.name %}selected{% endif %}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Result
+                <select name="result">
+                    <option value="">All</option>
+                    {% for r in results %}
+                    <option value="{{ r }}" {% if filter_result == r %}selected{% endif %}>{{ r | capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Min Key Level
+                <input type="number" name="min_key" value="{{ filter_min_key or '' }}" min="0" max="40">
+            </label>
+        </div>
+        <button type="submit">Filter</button>
+    </form>
+</details>
+
+{% if runs %}
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Dungeon</th>
+            <th>Key</th>
+            <th>Result</th>
+            <th>Time</th>
+            <th>Deaths</th>
+            <th>Vibe</th>
+            <th>Rating</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for run in runs %}
+        <tr>
+            <td>{{ run.created_at.strftime('%m/%d %H:%M') if run.created_at else '' }}</td>
+            <td>{{ run.dungeon_name }}</td>
+            <td class="key-level">+{{ run.key_level }}</td>
+            <td>
+                <span class="result-{{ run.result }}">
+                    {{ run.result | capitalize }}
+                    {% if run.result == 'timed' and run.upgrade_count %}
+                    <span class="stars">{% for i in range(run.upgrade_count) %}&#9733;{% endfor %}</span>
+                    {% endif %}
+                </span>
+            </td>
+            <td>
+                {% if run.duration_seconds %}
+                {{ (run.duration_seconds // 60) }}:{{ '%02d' | format(run.duration_seconds % 60) }}
+                {% else %}--{% endif %}
+            </td>
+            <td>{{ run.deaths }}</td>
+            <td>
+                {% if run.vibe %}
+                <span class="vibe-badge vibe-{{ run.vibe }}">{{ run.vibe }}</span>
+                {% endif %}
+            </td>
+            <td>{% if run.rating %}{{ '&#9733;' * run.rating }}{% endif %}</td>
+            <td><a href="/runs/{{ run.id }}">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p><small>{{ runs | length }} run(s)</small></p>
+{% else %}
+<p>No runs found. <a href="/runs/new">Log your first run!</a></p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Dashboard</h2>
+
+<div class="grid">
+    <article class="stat-card">
+        <div class="stat-value">{{ total_runs }}</div>
+        <div class="stat-label">Total Runs</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ timed_pct }}%</div>
+        <div class="stat-label">Timed</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">+{{ highest_key }}</div>
+        <div class="stat-label">Highest Timed Key</div>
+    </article>
+    <article class="stat-card">
+        <a href="/runs/new" role="button">Log a Run</a>
+    </article>
+</div>
+
+<h3>Recent Runs</h3>
+{% if recent_runs %}
+<table>
+    <thead>
+        <tr>
+            <th>Dungeon</th>
+            <th>Key</th>
+            <th>Result</th>
+            <th>Deaths</th>
+            <th>Vibe</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for run in recent_runs %}
+        <tr>
+            <td>{{ run.dungeon_name }}</td>
+            <td class="key-level">+{{ run.key_level }}</td>
+            <td><span class="result-{{ run.result }}">{{ run.result | capitalize }}</span></td>
+            <td>{{ run.deaths }}</td>
+            <td>
+                {% if run.vibe %}
+                <span class="vibe-badge vibe-{{ run.vibe }}">{{ run.vibe }}</span>
+                {% endif %}
+            </td>
+            <td><a href="/runs/{{ run.id }}">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No runs logged yet. <a href="/runs/new">Log your first run!</a></p>
+{% endif %}
+{% endblock %}

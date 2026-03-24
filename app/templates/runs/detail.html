@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Run Detail - Mythic+ Tracker{% endblock %}
+{% block content %}
+{% if not run %}
+<p>Run not found. <a href="/runs">Back to runs</a></p>
+{% else %}
+
+<h2>{{ run.dungeon_name }} +{{ run.key_level }}</h2>
+
+<div class="grid">
+    <article class="stat-card">
+        <div class="stat-value result-{{ run.result }}">
+            {{ run.result | capitalize }}
+            {% if run.result == 'timed' and run.upgrade_count %}
+            <span class="stars">{% for i in range(run.upgrade_count) %}&#9733;{% endfor %}</span>
+            {% endif %}
+        </div>
+        <div class="stat-label">Result</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ duration_str or '--:--' }}</div>
+        <div class="stat-label">Duration</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ run.deaths }}</div>
+        <div class="stat-label">Deaths</div>
+    </article>
+    {% if run.vibe %}
+    <article class="stat-card">
+        <div class="stat-value"><span class="vibe-badge vibe-{{ run.vibe }}">{{ run.vibe }}</span></div>
+        <div class="stat-label">Vibe</div>
+    </article>
+    {% endif %}
+</div>
+
+{% if run.rating %}
+<p>Fun Rating: <span class="stars">{% for i in range(run.rating) %}&#9733;{% endfor %}</span> ({{ run.rating }}/5)</p>
+{% endif %}
+
+{% if run.notes %}
+<blockquote>{{ run.notes }}</blockquote>
+{% endif %}
+
+<h3>Group Composition</h3>
+{% if member_data %}
+<div class="group-comp">
+    {% for md in member_data %}
+    <div class="group-member role-{{ md.member.role or 'dps' }}">
+        <strong>
+            {% if md.character %}
+            <a href="/characters/{{ md.character.id }}">{{ md.character.name }}</a>-{{ md.character.realm }}
+            {% else %}
+            Unknown
+            {% endif %}
+        </strong>
+        {% if md.member.was_me %} (Me){% endif %}
+        <br>
+        <small>
+            {{ md.member.spec or '' }} {{ md.character.class_name or '' }}
+            {% if md.member.role %} &middot; {{ md.member.role | capitalize }}{% endif %}
+        </small>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p><small>No group data recorded.</small></p>
+{% endif %}
+
+{% if songs %}
+<h3>Soundtrack</h3>
+<ul class="song-list">
+    {% for song in songs %}
+    <li>
+        <strong>{{ song.track_name }}</strong>
+        <span class="artist"> &mdash; {{ song.artist_name }}</span>
+        {% if song.album_name %}<br><small>{{ song.album_name }}</small>{% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<p><small>Logged {{ run.created_at.strftime('%B %d, %Y at %H:%M') if run.created_at else 'unknown' }}</small></p>
+<p><a href="/runs">&larr; Back to runs</a></p>
+
+{% endif %}
+{% endblock %}

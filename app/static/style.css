@@ -1,0 +1,90 @@
+/* Mythic+ Tracker custom styles */
+
+:root {
+    --vibe-chill: #4ade80;
+    --vibe-sweaty: #f97316;
+    --vibe-chaotic: #a855f7;
+    --vibe-tilting: #ef4444;
+    --vibe-cracked: #06b6d4;
+}
+
+.vibe-badge {
+    display: inline-block;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+.vibe-chill { background: var(--vibe-chill); color: #000; }
+.vibe-sweaty { background: var(--vibe-sweaty); color: #000; }
+.vibe-chaotic { background: var(--vibe-chaotic); color: #fff; }
+.vibe-tilting { background: var(--vibe-tilting); color: #fff; }
+.vibe-cracked { background: var(--vibe-cracked); color: #000; }
+
+.result-timed { color: #4ade80; font-weight: 600; }
+.result-completed { color: #facc15; font-weight: 600; }
+.result-depleted { color: #ef4444; font-weight: 600; }
+.result-abandoned { color: #6b7280; font-weight: 600; }
+
+.stars { color: #facc15; }
+
+.key-level {
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1rem;
+}
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.song-list {
+    list-style: none;
+    padding: 0;
+}
+.song-list li {
+    padding: 0.3em 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.song-list .artist {
+    opacity: 0.6;
+    font-size: 0.9em;
+}
+
+.group-comp {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.group-member {
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+    font-size: 0.9em;
+}
+.role-tank { border-left: 3px solid #3b82f6; }
+.role-healer { border-left: 3px solid #4ade80; }
+.role-dps { border-left: 3px solid #ef4444; }
+
+.member-fields {
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.flash-success {
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid #4ade80;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}

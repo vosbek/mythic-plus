@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Characters - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Characters</h2>
+
+<div class="grid">
+    <div>
+        <form method="get" action="/characters">
+            <input type="search" name="q" placeholder="Search characters..." value="{{ search }}">
+        </form>
+
+        <h4>Lookup New Character</h4>
+        <form method="get" action="" id="lookup-form">
+            <div class="grid">
+                <input type="text" id="lookup-name" placeholder="Name" required>
+                <input type="text" id="lookup-realm" placeholder="Realm" value="Stormrage">
+                <select id="lookup-region">
+                    <option value="us">US</option>
+                    <option value="eu">EU</option>
+                </select>
+                <button type="button" onclick="
+                    var n = document.getElementById('lookup-name').value;
+                    var r = document.getElementById('lookup-realm').value;
+                    var rg = document.getElementById('lookup-region').value;
+                    if(n && r) window.location = '/characters/lookup/' + rg + '/' + r + '/' + n;
+                ">Lookup</button>
+            </div>
+        </form>
+
+        <h4>Known Characters</h4>
+        <table>
+            <thead><tr><th>Name</th><th>Realm</th><th>Class</th><th>Score</th></tr></thead>
+            <tbody>
+            {% for c in characters %}
+            <tr>
+                <td><a href="/characters/{{ c.id }}">{{ c.name }}</a> {% if c.is_mine %}<small>(mine)</small>{% endif %}</td>
+                <td>{{ c.realm }}</td>
+                <td>{{ c.class_name or '?' }}</td>
+                <td>{{ c.raiderio_score or '--' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if selected %}
+    <div>
+        <article>
+            <header>
+                <h3>{{ selected.name }}-{{ selected.realm }}
+                    {% if selected.is_mine %}<small>(My Character)</small>{% endif %}
+                </h3>
+            </header>
+            <p>
+                <strong>Class:</strong> {{ selected.class_name or 'Unknown' }}<br>
+                <strong>Spec:</strong> {{ selected.spec or 'Unknown' }}<br>
+                <strong>Role:</strong> {{ (selected.role or 'Unknown') | capitalize }}<br>
+                <strong>Raider.IO Score:</strong> {{ selected.raiderio_score or 'N/A' }}<br>
+                <strong>Region:</strong> {{ selected.region | upper }}
+            </p>
+            <p>
+                <strong>Runs Together:</strong> {{ run_count }}<br>
+                <strong>Timed Together:</strong> {{ timed_count }}
+                {% if run_count > 0 %}
+                ({{ (timed_count / run_count * 100) | round(1) }}%)
+                {% endif %}
+            </p>
+
+            {% if rio_data %}
+            {% if rio_data.mythic_plus_best_runs %}
+            <h4>Best M+ Runs</h4>
+            <table>
+                <thead><tr><th>Dungeon</th><th>Key</th><th>Score</th></tr></thead>
+                <tbody>
+                {% for run in rio_data.mythic_plus_best_runs[:8] %}
+                <tr>
+                    <td>{{ run.dungeon }}</td>
+                    <td>+{{ run.mythic_level }}</td>
+                    <td>{{ run.score }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if rio_data.mythic_plus_recent_runs %}
+            <h4>Recent M+ Runs</h4>
+            <table>
+                <thead><tr><th>Dungeon</th><th>Key</th><th>Score</th></tr></thead>
+                <tbody>
+                {% for run in rio_data.mythic_plus_recent_runs[:5] %}
+                <tr>
+                    <td>{{ run.dungeon }}</td>
+                    <td>+{{ run.mythic_level }}</td>
+                    <td>{{ run.score }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+            {% endif %}
+
+            {% if selected.raiderio_last_fetched %}
+            <footer>
+                <small>Raider.IO data updated {{ selected.raiderio_last_fetched.strftime('%m/%d %H:%M') }}</small>
+            </footer>
+            {% endif %}
+        </article>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

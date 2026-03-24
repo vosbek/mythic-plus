@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mythic+ Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="container">
+        <ul>
+            <li><strong>&#9876; Mythic+ Tracker</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/runs">Runs</a></li>
+            <li><a href="/runs/new">Log Run</a></li>
+            <li><a href="/characters">Characters</a></li>
+            <li><a href="/stats">Stats</a></li>
+            <li><a href="/spotify">Spotify</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="container">
+        <small>Mythic+ Tracker &mdash; Midnight Season 1</small>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

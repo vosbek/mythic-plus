@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Log a Run - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Log a Run</h2>
+
+<form method="post" action="/runs/new">
+    <div class="grid">
+        <label>
+            Dungeon
+            <select name="dungeon_name" required>
+                <option value="">Select dungeon...</option>
+                {% for d in dungeons %}
+                <option value="{{ d.name }}">{{ d.name }} ({{ d.short_name }})</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Key Level
+            <input type="number" name="key_level" min="2" max="40" required placeholder="+10">
+        </label>
+        <label>
+            Result
+            <select name="result" required>
+                {% for r in results %}
+                <option value="{{ r }}">{{ r | capitalize }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
+
+    <div class="grid">
+        <label>
+            Duration (minutes)
+            <input type="number" name="duration_minutes" min="0" max="120" placeholder="28">
+        </label>
+        <label>
+            Duration (seconds)
+            <input type="number" name="duration_seconds" min="0" max="59" placeholder="45">
+        </label>
+        <label>
+            Stars (if timed)
+            <select name="upgrade_count">
+                <option value="0">N/A</option>
+                <option value="1">&#9733; (+1)</option>
+                <option value="2">&#9733;&#9733; (+2)</option>
+                <option value="3">&#9733;&#9733;&#9733; (+3)</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="grid">
+        <label>
+            Deaths
+            <input type="number" name="deaths" min="0" value="0">
+        </label>
+        <label>
+            Start Time (hour, 24h)
+            <input type="number" name="started_hour" min="-1" max="23" value="-1" placeholder="Optional">
+        </label>
+        <label>
+            Start Time (minute)
+            <input type="number" name="started_minute" min="0" max="59" value="0">
+        </label>
+    </div>
+
+    <h3>Group Composition</h3>
+    {% for i in range(5) %}
+    <div class="member-fields">
+        <div class="grid">
+            <label>
+                {% if i == 0 %}Player {{ i + 1 }} (You?){% else %}Player {{ i + 1 }}{% endif %}
+                <input type="text" name="member_{{ i }}_name" placeholder="Character name"
+                    list="char-suggestions" autocomplete="off">
+            </label>
+            <label>
+                Realm
+                <input type="text" name="member_{{ i }}_realm" placeholder="Realm" value="Stormrage">
+            </label>
+            <label>
+                Class
+                <select name="member_{{ i }}_class">
+                    <option value="">Select...</option>
+                    {% for cls in wow_classes %}
+                    <option value="{{ cls }}">{{ cls }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+        <div class="grid">
+            <label>
+                Spec
+                <input type="text" name="member_{{ i }}_spec" placeholder="Spec">
+            </label>
+            <label>
+                Role
+                <select name="member_{{ i }}_role">
+                    <option value="">Select...</option>
+                    {% for r in roles %}
+                    <option value="{{ r }}">{{ r | capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                <input type="checkbox" name="member_{{ i }}_is_me" {% if i == 0 %}checked{% endif %}>
+                This is me
+            </label>
+        </div>
+    </div>
+    {% endfor %}
+
+    <datalist id="char-suggestions">
+        {% for c in characters %}
+        <option value="{{ c.name }}">{{ c.name }}-{{ c.realm }}</option>
+        {% endfor %}
+    </datalist>
+
+    <h3>Fun Stuff</h3>
+    <div class="grid">
+        <label>
+            Vibe
+            <select name="vibe">
+                <option value="">Pick a vibe...</option>
+                {% for v in vibes %}
+                <option value="{{ v }}">{{ v | capitalize }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Fun Rating (1-5)
+            <select name="rating">
+                <option value="0">N/A</option>
+                <option value="1">1 - Pain</option>
+                <option value="2">2 - Meh</option>
+                <option value="3">3 - Fine</option>
+                <option value="4">4 - Fun</option>
+                <option value="5">5 - Banger</option>
+            </select>
+        </label>
+    </div>
+
+    <label>
+        Notes
+        <textarea name="notes" rows="3" placeholder="Tank pulled 3 packs at once and we lived. Legend."></textarea>
+    </label>
+
+    <button type="submit">Log Run</button>
+</form>
+{% endblock %}

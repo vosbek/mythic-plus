@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Stats - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Stats &amp; Analytics</h2>
+
+<!-- Overview -->
+<div class="grid">
+    <article class="stat-card">
+        <div class="stat-value">{{ overview.total_runs }}</div>
+        <div class="stat-label">Total Runs</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ overview.timed_pct }}%</div>
+        <div class="stat-label">Timed Rate</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">+{{ overview.highest_timed_key }}</div>
+        <div class="stat-label">Highest Timed</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ overview.avg_deaths }}</div>
+        <div class="stat-label">Avg Deaths/Run</div>
+    </article>
+</div>
+
+<!-- Weekly Vault -->
+<h3>Weekly Vault</h3>
+<article>
+    <p><strong>Runs this week:</strong> {{ vault.runs_this_week }}</p>
+    <div class="grid">
+        <div class="stat-card">
+            <div class="stat-value">{% if vault.slot1_unlocked %}+{{ vault.slot1 }}{% else %}&#128274;{% endif %}</div>
+            <div class="stat-label">Slot 1 (1 run)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{% if vault.slot2_unlocked %}+{{ vault.slot2 }}{% else %}&#128274;{% endif %}</div>
+            <div class="stat-label">Slot 2 (4 runs)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{% if vault.slot3_unlocked %}+{{ vault.slot3 }}{% else %}&#128274;{% endif %}</div>
+            <div class="stat-label">Slot 3 (8 runs)</div>
+        </div>
+    </div>
+    {% if not vault.slot3_unlocked %}
+    <small>{{ 8 - vault.runs_this_week }} more run(s) to unlock all vault slots</small>
+    {% endif %}
+</article>
+
+<!-- Streaks -->
+<h3>Streaks</h3>
+<div class="grid">
+    <article class="stat-card">
+        <div class="stat-value">
+            {{ streaks.current_streak }}
+            {% if streaks.current_streak_type == 'timed' %}&#128293;{% elif streaks.current_streak_type == 'depleted' %}&#128128;{% endif %}
+        </div>
+        <div class="stat-label">Current {{ (streaks.current_streak_type or 'N/A') | capitalize }} Streak</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ streaks.longest_timed_streak }}</div>
+        <div class="stat-label">Best Timed Streak</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ streaks.longest_depletion_streak }}</div>
+        <div class="stat-label">Worst Depletion Streak</div>
+    </article>
+</div>
+
+<!-- Nemesis & Best -->
+<h3>Dungeon Breakdown</h3>
+<div class="grid">
+    {% if nemesis %}
+    <article>
+        <header><strong>Nemesis Dungeon &#128128;</strong></header>
+        <p class="stat-value">{{ nemesis.dungeon }}</p>
+        <p>{{ nemesis.depletions }} depletion(s)</p>
+    </article>
+    {% endif %}
+    {% if best %}
+    <article>
+        <header><strong>Best Dungeon &#127942;</strong></header>
+        <p class="stat-value">{{ best.dungeon }}</p>
+        <p>{{ best.timed_pct }}% timed ({{ best.total }} runs)</p>
+    </article>
+    {% endif %}
+</div>
+
+<!-- Vibe Check -->
+{% if vibes %}
+<h3>Vibe Check</h3>
+<table>
+    <thead><tr><th>Vibe</th><th>Runs</th><th>Timed</th><th>Timed %</th></tr></thead>
+    <tbody>
+    {% for v in vibes %}
+    <tr>
+        <td><span class="vibe-badge vibe-{{ v.vibe }}">{{ v.vibe }}</span></td>
+        <td>{{ v.total }}</td>
+        <td>{{ v.timed }}</td>
+        <td>{{ v.timed_pct }}%</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Time of Day -->
+{% if time_of_day %}
+<h3>Time of Day Performance</h3>
+<table>
+    <thead><tr><th>Period</th><th>Runs</th><th>Timed %</th></tr></thead>
+    <tbody>
+    {% for t in time_of_day %}
+    <tr>
+        <td>{{ t.period }}</td>
+        <td>{{ t.total }}</td>
+        <td>{{ t.timed_pct }}%</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Group Chemistry -->
+{% if chemistry %}
+<h3>Group Chemistry</h3>
+<table>
+    <thead><tr><th>Player</th><th>Runs Together</th><th>Timed %</th><th>Title</th></tr></thead>
+    <tbody>
+    {% for c in chemistry %}
+    <tr>
+        <td><a href="/characters/{{ c.character.id }}">{{ c.character.name }}</a>-{{ c.character.realm }}</td>
+        <td>{{ c.run_count }}</td>
+        <td>{{ c.timed_pct }}%</td>
+        <td><em>{{ c.title }}</em></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Lucky Song -->
+{% if lucky_song %}
+<h3>Lucky Song &#127925;</h3>
+<article>
+    <p class="stat-value">{{ lucky_song.track }}</p>
+    <p>{{ lucky_song.artist }} &mdash; {{ lucky_song.timed_pct }}% timed rate ({{ lucky_song.appearances }} runs)</p>
+</article>
+{% endif %}
+
+{% if overview.total_runs == 0 %}
+<p>No data yet! <a href="/runs/new">Log some runs</a> to see your stats.</p>
+{% endif %}
+{% endblock %}

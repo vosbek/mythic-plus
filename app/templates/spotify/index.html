@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Spotify - Mythic+ Tracker{% endblock %}
+{% block content %}
+<h2>Spotify Integration</h2>
+
+{% if not configured %}
+<article>
+    <header><strong>Setup Required</strong></header>
+    <p>To use Spotify integration, you need to:</p>
+    <ol>
+        <li>Create a Spotify Developer app at <code>https://developer.spotify.com/dashboard</code></li>
+        <li>Set the redirect URI to <code>http://localhost:8000/spotify/callback</code></li>
+        <li>Copy your Client ID and Client Secret to your <code>.env</code> file</li>
+    </ol>
+    <pre><code>SPOTIFY_CLIENT_ID=your_client_id_here
+SPOTIFY_CLIENT_SECRET=your_secret_here
+SPOTIFY_REDIRECT_URI=http://localhost:8000/spotify/callback</code></pre>
+    <p>Then restart the app.</p>
+</article>
+
+{% elif not connected %}
+<article>
+    <header><strong>Connect Spotify</strong></header>
+    <p>Connect your Spotify account to track what songs play during your M+ runs.</p>
+    <a href="{{ auth_url }}" role="button">Connect Spotify</a>
+</article>
+
+{% else %}
+<article>
+    <header><strong>Spotify Connected</strong></header>
+
+    {% if tracking_run %}
+    <p>Currently tracking songs for: <strong>{{ tracking_run.dungeon_name }} +{{ tracking_run.key_level }}</strong></p>
+    <div class="grid">
+        <form method="post" action="/spotify/track/capture">
+            <button type="submit">Capture Current Song</button>
+        </form>
+        <form method="post" action="/spotify/track/stop">
+            <button type="submit" class="secondary">Stop Tracking</button>
+        </form>
+    </div>
+    {% else %}
+    <p>Not currently tracking. Start tracking from a run's detail page, or log a new run.</p>
+    {% endif %}
+</article>
+{% endif %}
+
+{% if recent_songs %}
+<h3>Recently Captured Songs</h3>
+<ul class="song-list">
+    {% for song in recent_songs %}
+    <li>
+        <strong>{{ song.track_name }}</strong>
+        <span class="artist"> &mdash; {{ song.artist_name }}</span>
+        {% if song.album_name %}<br><small>{{ song.album_name }}</small>{% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
