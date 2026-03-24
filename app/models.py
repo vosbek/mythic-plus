@@ -19,6 +19,8 @@ class Character(SQLModel, table=True):
     class_name: Optional[str] = None
     spec: Optional[str] = None
     role: Optional[str] = None
+    guild: Optional[str] = None
+    title: Optional[str] = None
     raiderio_score: Optional[float] = None
     raiderio_last_fetched: Optional[datetime] = None
     is_mine: bool = False
@@ -78,6 +80,7 @@ class RunMember(SQLModel, table=True):
     dps: Optional[float] = None
     hps: Optional[float] = None
     performance_score: Optional[float] = None  # WCL percentile
+    mount: Optional[str] = None  # mount used this run
 
     run: Optional[Run] = Relationship(back_populates="members")
     character: Optional[Character] = Relationship(back_populates="run_memberships")

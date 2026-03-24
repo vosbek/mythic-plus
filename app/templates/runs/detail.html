@@ -5,7 +5,9 @@
 <p>Run not found. <a href="/runs">Back to runs</a></p>
 {% else %}
 
-<h2>{{ run.dungeon_name }} +{{ run.key_level }}</h2>
+<h2>{{ run.dungeon_name }} +{{ run.key_level }}
+    {% if affixes %}<br><small>{{ affixes | join(' / ') }}</small>{% endif %}
+</h2>
 
 <div class="grid">
     <article class="stat-card">
@@ -84,12 +86,37 @@
     {% if run.durability_before is not none and run.durability_after is not none %}
     <div><strong>Durability:</strong> {{ run.durability_before }}% &rarr; {{ run.durability_after }}%</div>
     {% endif %}
+    {% if run.played_seconds %}
+    <div><strong>Time in Key:</strong> {{ run.played_seconds // 60 }}m {{ run.played_seconds % 60 }}s</div>
+    {% endif %}
+    {% if time_margin is not none %}
+    <div><strong>Timer Margin:</strong>
+        {% if time_margin >= 0 %}
+        {{ time_margin // 60 }}:{{ '%02d' | format(time_margin % 60) }} under
+        {% else %}
+        {{ (-time_margin) // 60 }}:{{ '%02d' | format((-time_margin) % 60) }} over
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 
-{% if run.buffs_json %}
+{% if buffs %}
 <h3>Pre-Key Buff Check</h3>
-<p><small>{{ run.buffs_json }}</small></p>
+<div class="grid">
+    <div>
+        <strong>Flask:</strong>
+        {% if buffs.flask %}{{ buffs.flask | join(', ') }}{% else %}<span style="opacity:0.5">None</span>{% endif %}
+    </div>
+    <div>
+        <strong>Food:</strong>
+        {% if buffs.food %}{{ buffs.food | join(', ') }}{% else %}<span style="opacity:0.5">None</span>{% endif %}
+    </div>
+    <div>
+        <strong>Rune:</strong>
+        {% if buffs.rune %}{{ buffs.rune | join(', ') }}{% else %}<span style="opacity:0.5">None</span>{% endif %}
+    </div>
+</div>
 {% endif %}
 
 {% if run.wcl_report_id %}

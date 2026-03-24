@@ -23,6 +23,23 @@
     </article>
 </div>
 
+{% if overview.total_gold_spent or overview.total_played_hours %}
+<div class="grid">
+    {% if overview.total_gold_spent %}
+    <article class="stat-card">
+        <div class="stat-value">{{ '{:,.0f}'.format(overview.total_gold_spent / 10000) }}g</div>
+        <div class="stat-label">Total Gold Spent</div>
+    </article>
+    {% endif %}
+    {% if overview.total_played_hours %}
+    <article class="stat-card">
+        <div class="stat-value">{{ overview.total_played_hours }}h</div>
+        <div class="stat-label">Time in M+</div>
+    </article>
+    {% endif %}
+</div>
+{% endif %}
+
 <!-- Weekly Vault -->
 <h3>Weekly Vault</h3>
 <article>
@@ -46,14 +63,56 @@
     {% endif %}
 </article>
 
+<!-- Dungeon Tier List -->
+{% if tier_list %}
+<h3>Your Dungeon Tier List</h3>
+<table>
+    <thead><tr><th>Tier</th><th>Dungeon</th><th>Runs</th><th>Timed %</th><th>Avg Key</th><th>Max Key</th></tr></thead>
+    <tbody>
+    {% for d in tier_list %}
+    <tr>
+        <td><strong>{{ d.tier }}</strong></td>
+        <td>{{ d.dungeon }}</td>
+        <td>{{ d.total }}</td>
+        <td>{{ d.timed_pct }}%</td>
+        <td>+{{ d.avg_key }}</td>
+        <td>+{{ d.max_key }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Time Margins -->
+{% if time_margins and time_margins.timed_count %}
+<h3>Timing Margins</h3>
+<div class="grid">
+    {% if time_margins.avg_timed_margin is not none %}
+    <article class="stat-card">
+        <div class="stat-value">{{ (time_margins.avg_timed_margin // 60) }}:{{ '%02d' | format(time_margins.avg_timed_margin % 60) }}</div>
+        <div class="stat-label">Avg Time Under (timed)</div>
+    </article>
+    {% endif %}
+    {% if time_margins.closest_time is not none %}
+    <article class="stat-card">
+        <div class="stat-value">{{ (time_margins.closest_time // 60) }}:{{ '%02d' | format(time_margins.closest_time % 60) }}</div>
+        <div class="stat-label">Closest Time</div>
+    </article>
+    {% endif %}
+    {% if time_margins.avg_over_time is not none %}
+    <article class="stat-card">
+        <div class="stat-value">{{ ((-time_margins.avg_over_time) // 60) }}:{{ '%02d' | format((-time_margins.avg_over_time) % 60) }}</div>
+        <div class="stat-label">Avg Over Time (depleted)</div>
+    </article>
+    {% endif %}
+</div>
+{% endif %}
+
 <!-- Streaks -->
 <h3>Streaks</h3>
 <div class="grid">
     <article class="stat-card">
-        <div class="stat-value">
-            {{ streaks.current_streak }}
-            {% if streaks.current_streak_type == 'timed' %}&#128293;{% elif streaks.current_streak_type == 'depleted' %}&#128128;{% endif %}
-        </div>
+        <div class="stat-value">{{ streaks.current_streak }}</div>
         <div class="stat-label">Current {{ (streaks.current_streak_type or 'N/A') | capitalize }} Streak</div>
     </article>
     <article class="stat-card">
@@ -67,23 +126,54 @@
 </div>
 
 <!-- Nemesis & Best -->
-<h3>Dungeon Breakdown</h3>
 <div class="grid">
     {% if nemesis %}
     <article>
-        <header><strong>Nemesis Dungeon &#128128;</strong></header>
+        <header><strong>Nemesis Dungeon</strong></header>
         <p class="stat-value">{{ nemesis.dungeon }}</p>
         <p>{{ nemesis.depletions }} depletion(s)</p>
     </article>
     {% endif %}
     {% if best %}
     <article>
-        <header><strong>Best Dungeon &#127942;</strong></header>
+        <header><strong>Best Dungeon</strong></header>
         <p class="stat-value">{{ best.dungeon }}</p>
         <p>{{ best.timed_pct }}% timed ({{ best.total }} runs)</p>
     </article>
     {% endif %}
 </div>
+
+<!-- Affix Performance -->
+{% if affixes %}
+<h3>Affix Performance</h3>
+<table>
+    <thead><tr><th>Affix</th><th>Runs</th><th>Timed</th><th>Timed %</th></tr></thead>
+    <tbody>
+    {% for a in affixes %}
+    <tr>
+        <td>{{ a.affix }}</td>
+        <td>{{ a.total }}</td>
+        <td>{{ a.timed }}</td>
+        <td>{{ a.timed_pct }}%</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Buff Compliance -->
+{% if buff_compliance %}
+<h3>Buff Compliance</h3>
+<p><small>Does being fully buffed actually matter?</small></p>
+<table>
+    <thead><tr><th>Status</th><th>Runs</th><th>Timed %</th></tr></thead>
+    <tbody>
+    <tr><td>Fully Buffed (flask + food)</td><td>{{ buff_compliance.full_buff.total }}</td><td>{{ buff_compliance.full_buff.timed_pct }}%</td></tr>
+    <tr><td>Partially Buffed</td><td>{{ buff_compliance.partial_buff.total }}</td><td>{{ buff_compliance.partial_buff.timed_pct }}%</td></tr>
+    <tr><td>No Buffs</td><td>{{ buff_compliance.no_buff.total }}</td><td>{{ buff_compliance.no_buff.timed_pct }}%</td></tr>
+    </tbody>
+</table>
+{% endif %}
 
 <!-- Vibe Check -->
 {% if vibes %}
@@ -103,6 +193,60 @@
 </table>
 {% endif %}
 
+<!-- Rating Analysis -->
+{% if ratings %}
+<h3>Fun Rating vs Success</h3>
+<table>
+    <thead><tr><th>Rating</th><th>Runs</th><th>Timed %</th></tr></thead>
+    <tbody>
+    {% for r in ratings %}
+    <tr>
+        <td>{{ '&#9733;' * r.rating }} {{ r.label }}</td>
+        <td>{{ r.total }}</td>
+        <td>{{ r.timed_pct }}%</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Role/Spec Stats -->
+{% if role_stats %}
+<h3>Spec Performance (Groupmates)</h3>
+<p><small>Which specs do you time most with?</small></p>
+<table>
+    <thead><tr><th>Spec</th><th>Runs</th><th>Timed %</th></tr></thead>
+    <tbody>
+    {% for r in role_stats %}
+    <tr>
+        <td>{{ r.spec }}</td>
+        <td>{{ r.total }}</td>
+        <td>{{ r.timed_pct }}%</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- ilvl Analysis -->
+{% if ilvl %}
+<h3>Item Level Analysis</h3>
+<div class="grid">
+    {% if ilvl.avg_timed_ilvl %}
+    <article class="stat-card">
+        <div class="stat-value">{{ ilvl.avg_timed_ilvl }}</div>
+        <div class="stat-label">Avg ilvl (Timed Runs)</div>
+    </article>
+    {% endif %}
+    {% if ilvl.avg_depleted_ilvl %}
+    <article class="stat-card">
+        <div class="stat-value">{{ ilvl.avg_depleted_ilvl }}</div>
+        <div class="stat-label">Avg ilvl (Depleted Runs)</div>
+    </article>
+    {% endif %}
+</div>
+{% endif %}
+
 <!-- Time of Day -->
 {% if time_of_day %}
 <h3>Time of Day Performance</h3>
@@ -120,15 +264,35 @@
 </table>
 {% endif %}
 
+<!-- Gold Stats -->
+{% if gold %}
+<h3>Gold Economy</h3>
+<div class="grid">
+    <article class="stat-card">
+        <div class="stat-value">{{ '{:,.0f}'.format(gold.total_spent / 10000) }}g</div>
+        <div class="stat-label">Total Spent</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ '{:,.0f}'.format(gold.avg_timed_cost / 10000) }}g</div>
+        <div class="stat-label">Avg Cost (Timed)</div>
+    </article>
+    <article class="stat-card">
+        <div class="stat-value">{{ '{:,.0f}'.format(gold.avg_depleted_cost / 10000) }}g</div>
+        <div class="stat-label">Avg Cost (Depleted)</div>
+    </article>
+</div>
+{% endif %}
+
 <!-- Group Chemistry -->
 {% if chemistry %}
 <h3>Group Chemistry</h3>
 <table>
-    <thead><tr><th>Player</th><th>Runs Together</th><th>Timed %</th><th>Title</th></tr></thead>
+    <thead><tr><th>Player</th><th>Guild</th><th>Runs</th><th>Timed %</th><th>Title</th></tr></thead>
     <tbody>
     {% for c in chemistry %}
     <tr>
         <td><a href="/characters/{{ c.character.id }}">{{ c.character.name }}</a>-{{ c.character.realm }}</td>
+        <td><small>{{ c.character.guild or '' }}</small></td>
         <td>{{ c.run_count }}</td>
         <td>{{ c.timed_pct }}%</td>
         <td><em>{{ c.title }}</em></td>
@@ -138,16 +302,50 @@
 </table>
 {% endif %}
 
-<!-- Lucky Song -->
-{% if lucky_song %}
-<h3>Lucky Song &#127925;</h3>
-<article>
-    <p class="stat-value">{{ lucky_song.track }}</p>
-    <p>{{ lucky_song.artist }} &mdash; {{ lucky_song.timed_pct }}% timed rate ({{ lucky_song.appearances }} runs)</p>
-</article>
+<!-- Guild Stats -->
+{% if guilds %}
+<h3>Guild Performance</h3>
+<table>
+    <thead><tr><th>Guild</th><th>Members Seen</th><th>Timed %</th></tr></thead>
+    <tbody>
+    {% for g in guilds %}
+    <tr>
+        <td>{{ g.guild }}</td>
+        <td>{{ g.runs }}</td>
+        <td>{{ g.timed_pct }}%</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
 {% endif %}
 
+<!-- Lucky Charms -->
+<h3>Lucky Charms</h3>
+<div class="grid">
+    {% if lucky_song %}
+    <article>
+        <header><strong>Lucky Song</strong></header>
+        <p><strong>{{ lucky_song.track }}</strong><br><small>{{ lucky_song.artist }}</small></p>
+        <p>{{ lucky_song.timed_pct }}% timed ({{ lucky_song.appearances }} runs)</p>
+    </article>
+    {% endif %}
+    {% if lucky_mount %}
+    <article>
+        <header><strong>Lucky Mount</strong></header>
+        <p><strong>{{ lucky_mount.mount }}</strong></p>
+        <p>{{ lucky_mount.timed_pct }}% timed ({{ lucky_mount.total }} runs)</p>
+    </article>
+    {% endif %}
+    {% if lucky_pet %}
+    <article>
+        <header><strong>Lucky Pet</strong></header>
+        <p><strong>{{ lucky_pet.pet }}</strong></p>
+        <p>{{ lucky_pet.timed_pct }}% timed ({{ lucky_pet.total }} runs)</p>
+    </article>
+    {% endif %}
+</div>
+
 {% if overview.total_runs == 0 %}
-<p>No data yet! <a href="/runs/new">Log some runs</a> to see your stats.</p>
+<p>No data yet! <a href="/runs/new">Log some runs</a> or <a href="/import/addon">import from the addon</a> to see your stats.</p>
 {% endif %}
 {% endblock %}

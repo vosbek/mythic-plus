@@ -239,7 +239,8 @@ def parse_savedvariables(file_path: str) -> dict:
 # ---------------------------------------------------------------
 
 def _find_or_create_character(session: Session, name: str, realm: str,
-                               class_token: str = None, guild: str = None) -> Character:
+                               class_token: str = None, guild: str = None,
+                               title: str = None) -> Character:
     """Find existing character or create a new one."""
     char = session.exec(
         select(Character).where(
@@ -256,6 +257,8 @@ def _find_or_create_character(session: Session, name: str, realm: str,
             realm=realm,
             region="us",
             class_name=class_name,
+            guild=guild,
+            title=title,
         )
         session.add(char)
         session.commit()
@@ -263,6 +266,10 @@ def _find_or_create_character(session: Session, name: str, realm: str,
     else:
         if class_name and not char.class_name:
             char.class_name = class_name
+        if guild:
+            char.guild = guild
+        if title:
+            char.title = title
         session.add(char)
         session.commit()
 
@@ -389,6 +396,7 @@ def import_addon_runs(session: Session, file_path: str) -> dict:
                     session, name, realm,
                     class_token=member_data.get("class"),
                     guild=member_data.get("guild"),
+                    title=member_data.get("title"),
                 )
 
                 role = ROLE_MAP.get(member_data.get("role", ""), "dps")
@@ -400,6 +408,7 @@ def import_addon_runs(session: Session, file_path: str) -> dict:
                     role=role,
                     was_me=bool(member_data.get("isMe", False)),
                     ilvl=member_data.get("ilvl"),
+                    mount=member_data.get("mount"),
                 )
                 session.add(run_member)
 

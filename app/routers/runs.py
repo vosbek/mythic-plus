@@ -74,6 +74,9 @@ async def create_run(
     vibe: str = Form(""),
     started_hour: int = Form(-1),
     started_minute: int = Form(0),
+    affixes: str = Form(""),
+    my_mount: str = Form(""),
+    companion_pet: str = Form(""),
 ):
     total_seconds = duration_minutes * 60 + duration_seconds if duration_minutes else None
 
@@ -82,6 +85,13 @@ async def create_run(
     if started_hour >= 0:
         now = datetime.now()
         started_at = now.replace(hour=started_hour, minute=started_minute, second=0, microsecond=0)
+
+    # Parse affixes
+    import json as _json
+    affixes_json = None
+    if affixes.strip():
+        affix_list = [a.strip() for a in affixes.split(",") if a.strip()]
+        affixes_json = _json.dumps(affix_list)
 
     with Session(engine) as session:
         # Get dungeon time limit
@@ -100,9 +110,13 @@ async def create_run(
             deaths=deaths,
             started_at=started_at,
             completed_at=datetime.utcnow(),
+            affixes=affixes_json,
             notes=notes if notes else None,
             rating=rating if rating else None,
             vibe=vibe if vibe else None,
+            my_mount=my_mount if my_mount else None,
+            companion_pet=companion_pet if companion_pet else None,
+            source="manual",
         )
         session.add(run)
         session.commit()
@@ -196,12 +210,37 @@ async def run_detail(request: Request, run_id: int):
         secs = run.duration_seconds % 60
         duration_str = f"{mins}:{secs:02d}"
 
+    # Parse affixes JSON
+    import json
+    affixes = []
+    if run.affixes:
+        try:
+            affixes = json.loads(run.affixes)
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    # Parse buffs JSON
+    buffs = None
+    if run.buffs_json:
+        try:
+            buffs = json.loads(run.buffs_json)
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    # Calculate time margin
+    time_margin = None
+    if run.duration_seconds and run.time_limit_seconds:
+        time_margin = run.time_limit_seconds - run.duration_seconds
+
     return templates.TemplateResponse("runs/detail.html", {
         "request": request,
         "run": run,
         "member_data": member_data,
         "songs": songs,
         "duration_str": duration_str,
+        "affixes": affixes,
+        "buffs": buffs,
+        "time_margin": time_margin,
     })
 
 
