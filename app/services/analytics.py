@@ -43,7 +43,7 @@ def get_nemesis_dungeon(session: Session) -> dict | None:
         select(Run.dungeon_name, func.count(Run.id).label("cnt"))
         .where(Run.result == "depleted")
         .group_by(Run.dungeon_name)
-        .order_by(col(func.count(Run.id)).desc())
+        .order_by(func.count(Run.id).desc())
         .limit(1)
     ).first()
     if result:
@@ -84,8 +84,8 @@ def get_streaks(session: Session) -> dict:
     streak = 0
     streak_type = None
 
-    for (result,) in runs:
-        r = result if isinstance(result, str) else result
+    for item in runs:
+        r = item if isinstance(item, str) else item[0]
         if r == streak_type:
             streak += 1
         else:
@@ -146,7 +146,7 @@ def get_group_chemistry(session: Session) -> list[dict]:
         .where(RunMember.was_me == False)
         .group_by(RunMember.character_id)
         .having(func.count(RunMember.id) >= 3)
-        .order_by(col(func.count(RunMember.id)).desc())
+        .order_by(func.count(RunMember.id).desc())
         .limit(10)
     ).all()
 

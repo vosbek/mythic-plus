@@ -175,8 +175,9 @@ async def create_run(
             session.add(run_member)
 
         session.commit()
+        run_id = run.id
 
-    return RedirectResponse(f"/runs/{run.id}", status_code=303)
+    return RedirectResponse(f"/runs/{run_id}", status_code=303)
 
 
 @router.get("/{run_id}")
