@@ -38,6 +38,7 @@ def _migrate_columns():
             ("runmember", "mount", "TEXT"),
             ("character", "guild", "TEXT"),
             ("character", "title", "TEXT"),
+            ("character", "race", "TEXT"),
         ]
         for table, col, dtype in migrations:
             try:

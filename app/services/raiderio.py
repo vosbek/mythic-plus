@@ -11,7 +11,7 @@ async def fetch_character_profile(name: str, realm: str, region: str = "us") -> 
         "region": region,
         "realm": realm,
         "name": name,
-        "fields": "mythic_plus_scores_by_season:current,mythic_plus_best_runs,mythic_plus_recent_runs,gear,class",
+        "fields": "mythic_plus_scores_by_season:current,mythic_plus_best_runs,mythic_plus_recent_runs,gear,class,guild",
     }
     async with httpx.AsyncClient(timeout=10) as client:
         try:
@@ -29,8 +29,11 @@ async def update_character_from_raiderio(session: Session, character: Character)
         return character
 
     character.class_name = data.get("class", character.class_name)
+    character.race = data.get("race", character.race)
     character.spec = data.get("active_spec_name", character.spec)
     character.role = data.get("active_spec_role", character.role)
+    if data.get("guild"):
+        character.guild = data["guild"].get("name", character.guild)
 
     seasons = data.get("mythic_plus_scores_by_season", [])
     if seasons:

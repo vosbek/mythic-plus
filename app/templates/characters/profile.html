@@ -29,13 +29,14 @@
 
         <h4>Known Characters</h4>
         <table>
-            <thead><tr><th>Name</th><th>Realm</th><th>Class</th><th>Score</th></tr></thead>
+            <thead><tr><th>Name</th><th>Realm</th><th>Race/Class</th><th>Guild</th><th>Score</th></tr></thead>
             <tbody>
             {% for c in characters %}
             <tr>
                 <td><a href="/characters/{{ c.id }}">{{ c.name }}</a> {% if c.is_mine %}<small>(mine)</small>{% endif %}</td>
                 <td>{{ c.realm }}</td>
-                <td>{{ c.class_name or '?' }}</td>
+                <td>{{ (c.race or '') ~ ' ' ~ (c.class_name or '?') }}</td>
+                <td>{{ c.guild or '' }}</td>
                 <td>{{ c.raiderio_score or '--' }}</td>
             </tr>
             {% endfor %}
@@ -52,9 +53,12 @@
                 </h3>
             </header>
             <p>
+                {% if selected.race %}<strong>Race:</strong> {{ selected.race }}<br>{% endif %}
                 <strong>Class:</strong> {{ selected.class_name or 'Unknown' }}<br>
                 <strong>Spec:</strong> {{ selected.spec or 'Unknown' }}<br>
                 <strong>Role:</strong> {{ (selected.role or 'Unknown') | capitalize }}<br>
+                {% if selected.guild %}<strong>Guild:</strong> &lt;{{ selected.guild }}&gt;<br>{% endif %}
+                {% if selected.title %}<strong>Title:</strong> {{ selected.title }}<br>{% endif %}
                 <strong>Raider.IO Score:</strong> {{ selected.raiderio_score or 'N/A' }}<br>
                 <strong>Region:</strong> {{ selected.region | upper }}
             </p>

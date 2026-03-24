@@ -17,6 +17,7 @@ class Character(SQLModel, table=True):
     realm: str
     region: str = "us"
     class_name: Optional[str] = None
+    race: Optional[str] = None
     spec: Optional[str] = None
     role: Optional[str] = None
     guild: Optional[str] = None

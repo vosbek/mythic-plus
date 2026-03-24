@@ -104,6 +104,7 @@ local function ScanGroupMembers()
             local name, realm = UnitName(unit)
             realm = realm or GetRealmName() -- nil if same server
             local _, classFile = UnitClass(unit)
+            local _, raceName = UnitRace(unit)
             local role = UnitGroupRolesAssigned(unit) -- TANK, HEALER, DAMAGER, NONE
             if role == "NONE" then role = "DAMAGER" end
 
@@ -145,6 +146,7 @@ local function ScanGroupMembers()
                 name = name,
                 realm = realm,
                 class = classFile, -- English class token like "DRUID"
+                race = raceName,   -- English race token like "NightElf"
                 spec = spec,
                 role = role,
                 ilvl = ilvl,

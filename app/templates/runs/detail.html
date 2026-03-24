@@ -20,8 +20,8 @@
         <div class="stat-label">Result</div>
     </article>
     <article class="stat-card">
-        <div class="stat-value">{{ duration_str or '--:--' }}</div>
-        <div class="stat-label">Duration</div>
+        <div class="stat-value">{{ duration_str or '--:--' }}{% if run.time_limit_seconds %} / {{ run.time_limit_seconds // 60 }}:{{ '%02d' | format(run.time_limit_seconds % 60) }}{% endif %}</div>
+        <div class="stat-label">Duration{% if run.time_limit_seconds %} / Time Limit{% endif %}</div>
     </article>
     <article class="stat-card">
         <div class="stat-value">{{ run.deaths }}</div>
@@ -56,13 +56,16 @@
             {% endif %}
         </strong>
         {% if md.member.was_me %} (Me){% endif %}
+        {% if md.character and md.character.title %}<br><em>{{ md.character.title }}</em>{% endif %}
         <br>
         <small>
-            {{ md.member.spec or '' }} {{ md.character.class_name or '' }}
+            {% if md.character and md.character.race %}{{ md.character.race }} {% endif %}{{ md.member.spec or '' }} {{ md.character.class_name or '' }}
             {% if md.member.role %} &middot; {{ md.member.role | capitalize }}{% endif %}
             {% if md.member.ilvl %} &middot; {{ md.member.ilvl | int }} ilvl{% endif %}
+            {% if md.character and md.character.guild %}<br>&lt;{{ md.character.guild }}&gt;{% endif %}
             {% if md.member.dps %}<br>DPS: {{ '{:,.0f}'.format(md.member.dps) }}{% endif %}
             {% if md.member.hps %} | HPS: {{ '{:,.0f}'.format(md.member.hps) }}{% endif %}
+            {% if md.member.mount %}<br>Mount: {{ md.member.mount }}{% endif %}
         </small>
     </div>
     {% endfor %}

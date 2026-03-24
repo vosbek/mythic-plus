@@ -37,6 +37,35 @@ ROLE_MAP = {
     "NONE": "dps",
 }
 
+# WoW race tokens to readable names
+RACE_TOKEN_MAP = {
+    "Human": "Human",
+    "Orc": "Orc",
+    "Dwarf": "Dwarf",
+    "NightElf": "Night Elf",
+    "Undead": "Undead",
+    "Tauren": "Tauren",
+    "Gnome": "Gnome",
+    "Troll": "Troll",
+    "Goblin": "Goblin",
+    "BloodElf": "Blood Elf",
+    "Draenei": "Draenei",
+    "Worgen": "Worgen",
+    "Pandaren": "Pandaren",
+    "Nightborne": "Nightborne",
+    "HighmountainTauren": "Highmountain Tauren",
+    "VoidElf": "Void Elf",
+    "LightforgedDraenei": "Lightforged Draenei",
+    "ZandalariTroll": "Zandalari Troll",
+    "KulTiran": "Kul Tiran",
+    "DarkIronDwarf": "Dark Iron Dwarf",
+    "Vulpera": "Vulpera",
+    "MagharOrc": "Mag'har Orc",
+    "Mechagnome": "Mechagnome",
+    "Dracthyr": "Dracthyr",
+    "Earthen": "Earthen",
+}
+
 
 # ---------------------------------------------------------------
 # Lua table parser (recursive descent)
@@ -240,7 +269,7 @@ def parse_savedvariables(file_path: str) -> dict:
 
 def _find_or_create_character(session: Session, name: str, realm: str,
                                class_token: str = None, guild: str = None,
-                               title: str = None) -> Character:
+                               title: str = None, race_token: str = None) -> Character:
     """Find existing character or create a new one."""
     char = session.exec(
         select(Character).where(
@@ -250,6 +279,7 @@ def _find_or_create_character(session: Session, name: str, realm: str,
     ).first()
 
     class_name = CLASS_TOKEN_MAP.get(class_token, class_token) if class_token else None
+    race_name = RACE_TOKEN_MAP.get(race_token, race_token) if race_token else None
 
     if not char:
         char = Character(
@@ -257,6 +287,7 @@ def _find_or_create_character(session: Session, name: str, realm: str,
             realm=realm,
             region="us",
             class_name=class_name,
+            race=race_name,
             guild=guild,
             title=title,
         )
@@ -266,6 +297,8 @@ def _find_or_create_character(session: Session, name: str, realm: str,
     else:
         if class_name and not char.class_name:
             char.class_name = class_name
+        if race_name and not char.race:
+            char.race = race_name
         if guild:
             char.guild = guild
         if title:
@@ -397,6 +430,7 @@ def import_addon_runs(session: Session, file_path: str) -> dict:
                     class_token=member_data.get("class"),
                     guild=member_data.get("guild"),
                     title=member_data.get("title"),
+                    race_token=member_data.get("race"),
                 )
 
                 role = ROLE_MAP.get(member_data.get("role", ""), "dps")
