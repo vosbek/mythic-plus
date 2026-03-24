@@ -2,7 +2,7 @@
 import json
 from datetime import datetime, timedelta
 from sqlmodel import Session
-from app.database import engine
+from tests.conftest import _engine as engine
 from app.models import Run, RunMember, Character, RunSong
 from app.services.analytics import (
     get_overview_stats,

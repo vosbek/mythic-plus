@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 from sqlmodel import Session, select
-from app.database import engine
+from tests.conftest import _engine as engine
 from app.models import Run, RunMember, Character, Dungeon
 
 

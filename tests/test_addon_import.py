@@ -5,7 +5,7 @@ import tempfile
 
 import pytest
 from sqlmodel import Session, select
-from app.database import engine
+from tests.conftest import _engine as engine
 from app.models import Run, RunMember, Character
 from app.services.addon_import import (
     LuaParser,

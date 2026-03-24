@@ -1,7 +1,7 @@
 """Tests for input validation, edge cases, and security."""
 import json
 from sqlmodel import Session, select
-from app.database import engine
+from tests.conftest import _engine as engine
 from app.models import Run, RunMember, Character
 
 
@@ -198,8 +198,8 @@ class TestEdgeCases:
         resp = client.get("/runs?dungeon=Ara-Kara%2C+City+of+Echoes")
         assert resp.status_code == 200
 
-    def test_negative_key_level(self, client):
-        """Negative key level should still create (no server-side validation yet)."""
+    def test_negative_key_level_rejected(self, client):
+        """Negative key level should be rejected by validation."""
         resp = client.post("/runs/new", data={
             "dungeon_name": "Ara-Kara, City of Echoes",
             "key_level": "-1",
@@ -217,8 +217,80 @@ class TestEdgeCases:
             "my_mount": "",
             "companion_pet": "",
         }, follow_redirects=False)
-        # FastAPI should still accept the int, app creates the run
         assert resp.status_code == 303
+        assert "error" in resp.headers.get("location", "").lower()
+
+    def test_invalid_result_rejected(self, client):
+        """Invalid result value should be rejected."""
+        resp = client.post("/runs/new", data={
+            "dungeon_name": "Ara-Kara, City of Echoes",
+            "key_level": "10",
+            "result": "hacked",
+            "duration_minutes": "20",
+            "duration_seconds": "0",
+            "deaths": "0",
+            "upgrade_count": "0",
+            "notes": "",
+            "rating": "0",
+            "vibe": "",
+            "started_hour": "-1",
+            "started_minute": "0",
+            "affixes": "",
+            "my_mount": "",
+            "companion_pet": "",
+        }, follow_redirects=False)
+        assert resp.status_code == 303
+        assert "error" in resp.headers.get("location", "").lower()
+
+    def test_invalid_vibe_rejected(self, client):
+        """Invalid vibe value should be rejected."""
+        resp = client.post("/runs/new", data={
+            "dungeon_name": "Ara-Kara, City of Echoes",
+            "key_level": "10",
+            "result": "timed",
+            "duration_minutes": "20",
+            "duration_seconds": "0",
+            "deaths": "0",
+            "upgrade_count": "1",
+            "notes": "",
+            "rating": "0",
+            "vibe": "nonexistent_vibe",
+            "started_hour": "-1",
+            "started_minute": "0",
+            "affixes": "",
+            "my_mount": "",
+            "companion_pet": "",
+        }, follow_redirects=False)
+        assert resp.status_code == 303
+        assert "error" in resp.headers.get("location", "").lower()
+
+    def test_key_level_100_rejected(self, client):
+        """Key level over 99 should be rejected."""
+        resp = client.post("/runs/new", data={
+            "dungeon_name": "Ara-Kara, City of Echoes",
+            "key_level": "100",
+            "result": "timed",
+            "duration_minutes": "20",
+            "duration_seconds": "0",
+            "deaths": "0",
+            "upgrade_count": "1",
+            "notes": "",
+            "rating": "0",
+            "vibe": "",
+            "started_hour": "-1",
+            "started_minute": "0",
+            "affixes": "",
+            "my_mount": "",
+            "companion_pet": "",
+        }, follow_redirects=False)
+        assert resp.status_code == 303
+        assert "error" in resp.headers.get("location", "").lower()
+
+    def test_error_shown_on_form(self, client):
+        """Error message should be visible when redirected back."""
+        resp = client.get("/runs/new?error=Key+level+must+be+between+2+and+99.")
+        assert resp.status_code == 200
+        assert "Key level must be between 2 and 99" in resp.text
 
 
 # ── Analytics Edge Cases ────────────────────────────────────────

@@ -1,10 +1,11 @@
+import json
 from datetime import datetime
 from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 from app.database import get_session, engine
-from app.models import Run, RunMember, Character, Dungeon
+from app.models import Run, RunMember, Character, Dungeon, RunSong
 from app.config import RESULTS, VIBES, WOW_CLASSES, ROLES
 
 router = APIRouter(prefix="/runs", tags=["runs"])
@@ -41,7 +42,7 @@ async def list_runs(
 
 
 @router.get("/new")
-async def new_run_form(request: Request):
+async def new_run_form(request: Request, error: str = ""):
     with Session(engine) as session:
         dungeons = session.exec(select(Dungeon).order_by(Dungeon.name)).all()
         characters = session.exec(
@@ -56,7 +57,32 @@ async def new_run_form(request: Request):
         "wow_classes": WOW_CLASSES,
         "roles": ROLES,
         "characters": characters,
+        "error": error,
     })
+
+
+def _validate_run_form(dungeon_name, key_level, result, duration_minutes,
+                        duration_seconds, deaths, upgrade_count, rating, vibe) -> str | None:
+    """Validate form inputs. Returns error message string or None."""
+    if not dungeon_name or not dungeon_name.strip():
+        return "Dungeon is required."
+    if key_level < 2 or key_level > 99:
+        return "Key level must be between 2 and 99."
+    if result not in RESULTS:
+        return f"Invalid result. Must be one of: {', '.join(RESULTS)}."
+    if duration_minutes < 0 or duration_minutes > 120:
+        return "Duration minutes must be between 0 and 120."
+    if duration_seconds < 0 or duration_seconds > 59:
+        return "Duration seconds must be between 0 and 59."
+    if deaths < 0 or deaths > 999:
+        return "Deaths must be between 0 and 999."
+    if upgrade_count < 0 or upgrade_count > 3:
+        return "Upgrade count must be between 0 and 3."
+    if rating < 0 or rating > 5:
+        return "Rating must be between 0 and 5."
+    if vibe and vibe not in VIBES:
+        return f"Invalid vibe. Must be one of: {', '.join(VIBES)}."
+    return None
 
 
 @router.post("/new")
@@ -78,20 +104,39 @@ async def create_run(
     my_mount: str = Form(""),
     companion_pet: str = Form(""),
 ):
-    total_seconds = duration_minutes * 60 + duration_seconds if duration_minutes else None
+    # Validate inputs
+    error = _validate_run_form(
+        dungeon_name, key_level, result, duration_minutes,
+        duration_seconds, deaths, upgrade_count, rating, vibe,
+    )
+    if error:
+        return RedirectResponse(
+            f"/runs/new?error={error}",
+            status_code=303,
+        )
+
+    # Clamp values to safe ranges
+    key_level = max(2, min(99, key_level))
+    deaths = max(0, min(999, deaths))
+    upgrade_count = max(0, min(3, upgrade_count))
+    rating = max(0, min(5, rating))
+
+    total_seconds = duration_minutes * 60 + duration_seconds if (duration_minutes or duration_seconds) else None
 
     # Build started_at from today + hour/minute if provided
     started_at = None
-    if started_hour >= 0:
+    if 0 <= started_hour <= 23 and 0 <= started_minute <= 59:
         now = datetime.now()
         started_at = now.replace(hour=started_hour, minute=started_minute, second=0, microsecond=0)
 
     # Parse affixes
-    import json as _json
     affixes_json = None
     if affixes.strip():
         affix_list = [a.strip() for a in affixes.split(",") if a.strip()]
-        affixes_json = _json.dumps(affix_list)
+        affixes_json = json.dumps(affix_list)
+
+    # Sanitize text fields
+    notes = notes.strip() if notes else ""
 
     with Session(engine) as session:
         # Get dungeon time limit
@@ -101,7 +146,7 @@ async def create_run(
         time_limit = dungeon.time_limit_seconds if dungeon else None
 
         run = Run(
-            dungeon_name=dungeon_name,
+            dungeon_name=dungeon_name.strip(),
             key_level=key_level,
             result=result,
             duration_seconds=total_seconds,
@@ -114,8 +159,8 @@ async def create_run(
             notes=notes if notes else None,
             rating=rating if rating else None,
             vibe=vibe if vibe else None,
-            my_mount=my_mount if my_mount else None,
-            companion_pet=companion_pet if companion_pet else None,
+            my_mount=my_mount.strip() if my_mount else None,
+            companion_pet=companion_pet.strip() if companion_pet else None,
             source="manual",
         )
         session.add(run)
@@ -134,6 +179,10 @@ async def create_run(
             member_spec = form_data.get(f"member_{i}_spec", "").strip()
             member_role = form_data.get(f"member_{i}_role", "").strip()
             member_is_me = form_data.get(f"member_{i}_is_me") == "on"
+
+            # Validate role if provided
+            if member_role and member_role not in ROLES:
+                member_role = "dps"
 
             # Find or create character
             char = session.exec(
@@ -155,7 +204,6 @@ async def create_run(
                 session.commit()
                 session.refresh(char)
             else:
-                # Update class/spec if provided and not set
                 if member_class and not char.class_name:
                     char.class_name = member_class
                 if member_spec:
@@ -199,7 +247,6 @@ async def run_detail(request: Request, run_id: int):
             char = session.get(Character, m.character_id)
             member_data.append({"member": m, "character": char})
 
-        from app.models import RunSong
         songs = session.exec(
             select(RunSong).where(RunSong.run_id == run_id).order_by(RunSong.played_at)
         ).all()
@@ -212,7 +259,6 @@ async def run_detail(request: Request, run_id: int):
         duration_str = f"{mins}:{secs:02d}"
 
     # Parse affixes JSON
-    import json
     affixes = []
     if run.affixes:
         try:

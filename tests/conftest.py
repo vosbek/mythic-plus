@@ -6,26 +6,43 @@ from datetime import datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel, create_engine, select
 
-# Override DATABASE_URL before any app imports
-_test_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
-_test_db.close()
-os.environ["DATABASE_URL"] = f"sqlite:///{_test_db.name}"
+# Use in-memory SQLite for speed — StaticPool ensures same DB across connections
+os.environ["DATABASE_URL"] = "sqlite://"
 
-from app.main import app  # noqa: E402
-from app.database import engine, init_db  # noqa: E402
 from app.models import Run, RunMember, Character, Dungeon, RunSong  # noqa: E402
+from app.config import DUNGEONS, DEFAULT_CHARACTER  # noqa: E402
+
+_engine = create_engine(
+    "sqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+    echo=False,
+)
+
+
+def _patch_engine():
+    """Replace all references to the DB engine with our in-memory engine."""
+    import sys
+    import app.database as db_mod
+    db_mod.engine = _engine
+    # Patch every loaded app module that has an 'engine' attribute from app.database
+    for name, mod in sys.modules.items():
+        if name.startswith("app.") and mod and hasattr(mod, "engine"):
+            mod.engine = _engine
+
+_patch_engine()
 
 
 @pytest.fixture(autouse=True)
 def reset_db():
-    """Fresh database for every test."""
-    SQLModel.metadata.drop_all(engine)
-    SQLModel.metadata.create_all(engine)
-    # Seed dungeons
-    from app.config import DUNGEONS, DEFAULT_CHARACTER
-    with Session(engine) as session:
+    """Fresh in-memory database for every test."""
+    _patch_engine()
+    SQLModel.metadata.drop_all(_engine)
+    SQLModel.metadata.create_all(_engine)
+    with Session(_engine) as session:
         for d in DUNGEONS:
             session.add(Dungeon(**d))
         session.add(Character(
@@ -36,19 +53,19 @@ def reset_db():
         ))
         session.commit()
     yield
-    # cleanup happens on next call
 
 
 @pytest.fixture
 def session():
     """Provide a database session."""
-    with Session(engine) as s:
+    with Session(_engine) as s:
         yield s
 
 
 @pytest.fixture
 def client():
     """FastAPI test client."""
+    from app.main import app
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -117,8 +134,7 @@ def sample_run(session):
 def multiple_runs(session):
     """Create a set of runs with varied data for analytics testing."""
     char = session.exec(
-        __import__("sqlmodel", fromlist=["select"]).select(Character)
-        .where(Character.is_mine == True)
+        select(Character).where(Character.is_mine == True)
     ).first()
 
     char2 = Character(name="Buddy", realm="Stormrage", region="us",
@@ -166,7 +182,6 @@ def multiple_runs(session):
         session.refresh(run)
         created_runs.append(run)
 
-        # Add members to each run
         m1 = RunMember(run_id=run.id, character_id=char.id,
                        spec="Restoration", role="healer", was_me=True, ilvl=623.0)
         m2 = RunMember(run_id=run.id, character_id=char2.id,

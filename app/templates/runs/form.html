@@ -3,6 +3,12 @@
 {% block content %}
 <h2>Log a Run</h2>
 
+{% if error %}
+<article style="background: var(--del-color, #e53935); color: white; padding: 0.75rem 1rem; margin-bottom: 1rem;">
+    {{ error }}
+</article>
+{% endif %}
+
 <form method="post" action="/runs/new">
     <div class="grid">
         <label>
