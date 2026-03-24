@@ -1,10 +1,10 @@
 import json
 from datetime import datetime
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
-from app.database import get_session, engine
+from app.database import engine
 from app.models import Run, RunMember, Character, Dungeon, RunSong
 from app.config import RESULTS, VIBES, WOW_CLASSES, ROLES
 
@@ -237,15 +237,14 @@ async def run_detail(request: Request, run_id: int):
                 "request": request, "run": None,
             })
 
-        members = session.exec(
-            select(RunMember).where(RunMember.run_id == run_id)
+        # Load members with character info in one query
+        rows = session.exec(
+            select(RunMember, Character)
+            .join(Character, RunMember.character_id == Character.id)
+            .where(RunMember.run_id == run_id)
         ).all()
 
-        # Load character info for each member
-        member_data = []
-        for m in members:
-            char = session.get(Character, m.character_id)
-            member_data.append({"member": m, "character": char})
+        member_data = [{"member": m, "character": c} for m, c in rows]
 
         songs = session.exec(
             select(RunSong).where(RunSong.run_id == run_id).order_by(RunSong.played_at)
@@ -295,7 +294,7 @@ async def run_detail(request: Request, run_id: int):
 async def search_characters(q: str = ""):
     """HTMX endpoint for character autocomplete."""
     if len(q) < 2:
-        return ""
+        return HTMLResponse("")
     with Session(engine) as session:
         chars = session.exec(
             select(Character)
@@ -303,7 +302,12 @@ async def search_characters(q: str = ""):
             .limit(10)
         ).all()
 
+    from markupsafe import escape
     html = ""
     for c in chars:
-        html += f'<option value="{c.name}" data-realm="{c.realm}" data-class="{c.class_name or ""}" data-role="{c.role or ""}">{c.name}-{c.realm}</option>'
-    return html
+        name = escape(c.name)
+        realm = escape(c.realm)
+        cls = escape(c.class_name or "")
+        role = escape(c.role or "")
+        html += f'<option value="{name}" data-realm="{realm}" data-class="{cls}" data-role="{role}">{name}-{realm}</option>'
+    return HTMLResponse(html)

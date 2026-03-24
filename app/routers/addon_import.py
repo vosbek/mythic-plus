@@ -40,10 +40,15 @@ async def do_addon_import(
             status_code=303,
         )
 
-    path = Path(file_path)
+    path = Path(file_path).resolve()
+    if not path.suffix == ".lua":
+        return RedirectResponse(
+            "/import/addon?error=File+must+be+a+.lua+SavedVariables+file.",
+            status_code=303,
+        )
     if not path.exists():
         return RedirectResponse(
-            f"/import/addon?error=File+not+found:+{file_path}",
+            "/import/addon?error=File+not+found.+Check+your+SavedVariables+path.",
             status_code=303,
         )
 

@@ -320,6 +320,7 @@
 {% endif %}
 
 <!-- Lucky Charms -->
+{% if lucky_song or lucky_mount or lucky_pet %}
 <h3>Lucky Charms</h3>
 <div class="grid">
     {% if lucky_song %}
@@ -344,6 +345,7 @@
     </article>
     {% endif %}
 </div>
+{% endif %}
 
 {% if overview.total_runs == 0 %}
 <p>No data yet! <a href="/runs/new">Log some runs</a> or <a href="/import/addon">import from the addon</a> to see your stats.</p>

@@ -1,5 +1,5 @@
 import json
-from sqlmodel import Session, select, func, col
+from sqlmodel import Session, select, func
 from app.models import Run, RunMember, Character, RunSong
 
 
@@ -13,11 +13,10 @@ def get_overview_stats(session: Session) -> dict:
     # Gold spent
     total_gold_spent = 0
     gold_runs = session.exec(
-        select(Run.gold_before, Run.gold_after)
-        .where(Run.gold_before.isnot(None), Run.gold_after.isnot(None))
+        select(Run).where(Run.gold_before.isnot(None), Run.gold_after.isnot(None))
     ).all()
-    for before, after in gold_runs:
-        total_gold_spent += max(0, before - after)
+    for run in gold_runs:
+        total_gold_spent += max(0, run.gold_before - run.gold_after)
 
     # Total played time in M+
     total_played = session.exec(
@@ -518,13 +517,17 @@ def get_ilvl_analysis(session: Session) -> dict | None:
     ).all()
 
     data_points = []
-    for run_id, key_level, result in runs_with_ilvl:
-        ilvls = session.exec(
+    for row in runs_with_ilvl:
+        run_id = row[0] if isinstance(row, tuple) else row.id
+        key_level = row[1] if isinstance(row, tuple) else row.key_level
+        result = row[2] if isinstance(row, tuple) else row.result
+        ilvl_rows = session.exec(
             select(RunMember.ilvl)
             .where(RunMember.run_id == run_id, RunMember.ilvl.isnot(None))
         ).all()
-        if len(ilvls) >= 3:  # need at least 3 members with ilvl data
-            avg_ilvl = sum(i for (i,) in ilvls) / len(ilvls)
+        if len(ilvl_rows) >= 3:  # need at least 3 members with ilvl data
+            ilvl_vals = [i[0] if isinstance(i, tuple) else i for i in ilvl_rows]
+            avg_ilvl = sum(ilvl_vals) / len(ilvl_vals)
             data_points.append({
                 "key_level": key_level,
                 "avg_ilvl": round(avg_ilvl, 1),
